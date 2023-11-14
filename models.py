@@ -45,15 +45,7 @@ class PerceptronModel(object):
         """
         Train the perceptron until convergence.
         """
-        "*** YOUR CODE HERE ***"
-        # f=1
-        # while f==1:
-        #     f=0
-        #     for x, y in dataset.iterate_once(1):
-        #         if self.get_prediction(x) != nn.as_scalar(y):
-        #             nn.Parameter.update(self.w,x,nn.as_scalar(y))
-        #             f=1
-            
+        "*** YOUR CODE HERE ***"            
         allConsistent=False
         while allConsistent==False:
             allConsistent=True
