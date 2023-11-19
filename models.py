@@ -294,7 +294,7 @@ class LanguageIDModel(object):
             self.bx.update(grad_bx, alpha)
             self.bh.update(grad_bh, alpha)
             self.bf.update(grad_bf, alpha)
-            if nn.as_scalar(loss)<0.2:break
+            if nn.as_scalar(loss)<0.1:break
             # if nn.as_scalar(loss)<0.1 or abs(last_loss-nn.as_scalar(loss))<0.01:
             #     break
             # else:
