@@ -64,6 +64,10 @@ class RegressionModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        self.w1=nn.Parameter(1, 512)
+        self.w2=nn.Parameter(512, 1)
+        self.b1=nn.Parameter(1,512)
+        self.b2=nn.Parameter(1,1)
 
     def run(self, x):
         """
@@ -75,6 +79,12 @@ class RegressionModel(object):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
+        h1=nn.Linear(x,self.w1)
+        h1=nn.AddBias(h1,self.b1)
+        a1=nn.ReLU(h1)
+        h2=nn.Linear(a1,self.w2)
+        h2=nn.AddBias(h2,self.b2)
+        return h2
 
     def get_loss(self, x, y):
         """
@@ -87,12 +97,24 @@ class RegressionModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        return nn.SquareLoss(self.run(x),y)
 
     def train(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        batch_size=100
+        alpha=-0.05
+        for x,y in dataset.iterate_forever(batch_size):
+            loss=self.get_loss(x,y)
+            grad_w1, grad_w2, grad_b1, grad_b2 = nn.gradients(loss, [self.w1, self.w2, self.b1, self.b2])
+            self.w1.update(grad_w1, alpha)
+            self.w2.update(grad_w2, alpha)
+            self.b1.update(grad_b1, alpha)
+            self.b2.update(grad_b2, alpha)
+            if nn.as_scalar(loss)<0.02:
+                break
 
 class DigitClassificationModel(object):
     """
@@ -111,6 +133,10 @@ class DigitClassificationModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        self.w1=nn.Parameter(784, 200)
+        self.w2=nn.Parameter(200, 10)
+        self.b1=nn.Parameter(1,200)
+        self.b2=nn.Parameter(1,10)
 
     def run(self, x):
         """
@@ -127,6 +153,12 @@ class DigitClassificationModel(object):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
+        h1=nn.Linear(x,self.w1)
+        h1=nn.AddBias(h1,self.b1)
+        a1=nn.ReLU(h1)
+        h2=nn.Linear(a1,self.w2)
+        h2=nn.AddBias(h2,self.b2)
+        return h2
 
     def get_loss(self, x, y):
         """
@@ -142,12 +174,24 @@ class DigitClassificationModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        return nn.SoftmaxLoss(self.run(x),y)
 
     def train(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        batch_size=100
+        alpha=-0.5
+        for x,y in dataset.iterate_forever(batch_size):
+            loss=self.get_loss(x,y)
+            grad_w1, grad_w2, grad_b1, grad_b2 = nn.gradients(loss, [self.w1, self.w2, self.b1, self.b2])
+            self.w1.update(grad_w1, alpha)
+            self.w2.update(grad_w2, alpha)
+            self.b1.update(grad_b1, alpha)
+            self.b2.update(grad_b2, alpha)
+            if nn.as_scalar(loss)<0.001:
+                break
 
 class LanguageIDModel(object):
     """
@@ -167,6 +211,13 @@ class LanguageIDModel(object):
 
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        n=100
+        self.wx=nn.Parameter(self.num_chars, n)
+        self.wh=nn.Parameter(n, n)
+        self.bx=nn.Parameter(1, n)
+        self.bh=nn.Parameter(1, n)
+        self.wf=nn.Parameter(n, 5)
+        self.bf=nn.Parameter(1, 5)
 
     def run(self, xs):
         """
@@ -198,6 +249,16 @@ class LanguageIDModel(object):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
+        z=nn.Linear(xs[0], self.wx)
+        z=nn.AddBias(z,self.bx)
+        z=nn.ReLU(z)
+        for h in xs[1:]:
+            z=nn.Add(nn.Linear(z, self.wh), nn.Linear(h, self.wx))
+            z=nn.AddBias(z, self.bh)
+            z=nn.ReLU(z)
+        z=nn.Linear(z, self.wf)
+        z=nn.AddBias(z, self.bf)
+        return z
 
     def get_loss(self, xs, y):
         """
@@ -214,9 +275,27 @@ class LanguageIDModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        return nn.SoftmaxLoss(self.run(xs), y)
 
     def train(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        batch_size=100
+        alpha=-0.5
+        last_loss=float("inf")
+        for x,y in dataset.iterate_forever(batch_size):
+            loss=self.get_loss(x,y)
+            grad_wx, grad_wh, grad_wf, grad_bx, grad_bh, grad_bf = nn.gradients(loss, [self.wx, self.wh, self.wf, self.bx, self.bh, self.bf])
+            self.wx.update(grad_wx, alpha)
+            self.wh.update(grad_wh, alpha)
+            self.wf.update(grad_wf, alpha)
+            self.bx.update(grad_bx, alpha)
+            self.bh.update(grad_bh, alpha)
+            self.bf.update(grad_bf, alpha)
+            if nn.as_scalar(loss)<0.2:break
+            # if nn.as_scalar(loss)<0.1 or abs(last_loss-nn.as_scalar(loss))<0.01:
+            #     break
+            # else:
+            #     last_loss=nn.as_scalar(loss)
